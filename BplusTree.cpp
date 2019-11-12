@@ -1,4 +1,4 @@
-#include "BplusTree.h"
+﻿#include "BplusTree.h"
 #include <queue>
 
 Keytype getMin(Node *root);
@@ -174,7 +174,7 @@ bool BplusTree::remove(const Keytype record)
         r = p->key.size() - 1;
         while (r >= 0 && p->key[r] > record)
             r--; //在p指向的结点的键值中找到不大于target的最大key, r代表秩rank, 即位置
-        r++;
+        r++;//r = 0~child.size()
         p = reinterpret_cast<InternalNode *>(p->child[r]);
     }
     ExternalNode *v = reinterpret_cast<ExternalNode *>(p);
@@ -184,7 +184,8 @@ bool BplusTree::remove(const Keytype record)
         if (iter->first == record)
             break;
     v->data.erase(iter);
-    t->key[r-1] = v->data[0].first;
+	if (r != 0)
+		t->key[r-1] = v->data[0].first;
 
     if (v == _root) return true;
     //3.判断叶节点元素是否过少，若过少，进行第4步
@@ -206,8 +207,9 @@ bool BplusTree::remove(const Keytype record)
     if (r != t->child.size() - 1) {
         tempExternalNode = reinterpret_cast<ExternalNode *>(t->child[r + 1]);
         if (tempExternalNode->data.size() > (L_order + 1) / 2) {
-            v->data.insert(v->data.end(), tempExternalNode->data[tempExternalNode->data.size()-1]);
+            v->data.insert(v->data.end(), tempExternalNode->data[0]);
             tempExternalNode->data.erase(tempExternalNode->data.begin());
+			t->key[r] = tempExternalNode->data[0].first;
             return true;
         }
     }
@@ -229,10 +231,11 @@ bool BplusTree::remove(const Keytype record)
         for (int i = v->data.size()-1; i >= 0; i--)
             tempExternalNode->data.insert(tempExternalNode->data.begin(), v->data[i]);
         t->key[r] = tempExternalNode->data[0].first;
-        t->child.erase(iter2);
+		t->child.erase(iter2);
         t->key.erase(iter1);
     }
-    solveUnderflow(reinterpret_cast<InternalNode *>(p->parent));
+    solveUnderflow(reinterpret_cast<InternalNode *>(t));
+	
     return true;
 }
 void BplusTree::solveUnderflow(InternalNode *v)
@@ -249,10 +252,11 @@ void BplusTree::solveUnderflow(InternalNode *v)
     //若是，删去原来的root，用其child替代，这是树唯一减少高度的方式
     
     if (!root) {
-        if (v->isLeaf) return;
+		if (v->isLeaf) return;
         if (v->key.size() == 0) {
             _root = v->child[0];
-            delete v;
+			_root->parent = NULL;
+            //delete v;
         }
         return;
     }
@@ -267,7 +271,8 @@ void BplusTree::solveUnderflow(InternalNode *v)
             v->child.insert(v->child.begin(), tempExternalNode->child.back());
             tempExternalNode->key.pop_back();
             tempExternalNode->child.pop_back();
-            return;
+            root->key[r-1] = getMin(root->child[r]);
+			return;
         }
     }
     //再看右边是否有元素，同时判断个数是否符合要求，若符合，拿一个过来
@@ -275,9 +280,10 @@ void BplusTree::solveUnderflow(InternalNode *v)
         tempExternalNode = reinterpret_cast<InternalNode*>(root->child[r+1]);
         if (tempExternalNode->child.size() > (M_order+1)/2) {
             v->child.insert(v->child.end(), tempExternalNode->child[0]);
-            tempExternalNode->key.erase(tempExternalNode->key.begin());
-            tempExternalNode->child.erase(tempExternalNode->child.begin());
             v->key.insert(v->key.end(), getMin(v->child.back()));
+			tempExternalNode->key.erase(tempExternalNode->key.begin());
+            tempExternalNode->child.erase(tempExternalNode->child.begin());
+			root->key[r] = getMin(root->child[r+1]);
             return;
         }
     }
