@@ -186,6 +186,7 @@ bool BplusTree::remove(const Keytype record)
     v->data.erase(iter);
     t->key[r-1] = v->data[0].first;
 
+    if (v == _root) return true;
     //3.判断叶节点元素是否过少，若过少，进行第4步
     if (v->data.size() >= (L_order + 1) / 2)
         return true; //4->2, 5->3;
@@ -231,10 +232,10 @@ bool BplusTree::remove(const Keytype record)
         t->child.erase(iter2);
         t->key.erase(iter1);
     }
-    solveDownflow(reinterpret_cast<InternalNode *>(p->parent));
+    solveUnderflow(reinterpret_cast<InternalNode *>(p->parent));
     return true;
 }
-void BplusTree::solveDownflow(InternalNode *v)
+void BplusTree::solveUnderflow(InternalNode *v)
 {
     //1.检查是否结点内元素个数不够，此处为递归基
     //5-3,6-3
@@ -246,7 +247,9 @@ void BplusTree::solveDownflow(InternalNode *v)
     InternalNode* root = reinterpret_cast<InternalNode*>(v->parent);
     //v是_root的时候，检测child是否只剩一个元素，
     //若是，删去原来的root，用其child替代，这是树唯一减少高度的方式
+    
     if (!root) {
+        if (v->isLeaf) return;
         if (v->key.size() == 0) {
             _root = v->child[0];
             delete v;
@@ -303,12 +306,12 @@ void BplusTree::solveDownflow(InternalNode *v)
         root->key.erase(iter1);
     }
     //4.向上递归解决下溢
-    solveDownflow(reinterpret_cast<InternalNode *>(root));
+    solveUnderflow(reinterpret_cast<InternalNode *>(root));
     return;
 
 }
 
-Keytype getMin(Node *root)
+Keytype BplusTree::getMin(Node *root)
 {
     if (root->isLeaf)
         return reinterpret_cast<ExternalNode *>(root)->data[0].first;
@@ -321,12 +324,21 @@ void BplusTree::levelOrder()
     int currentlineflag = 1;
     int nextlineflag = 0;
     int numbercount = 0;
+    int linecnt = 0;
+    bool first1 = true;
+    bool first2 = true;
     while (!q.empty())
     {
+        if(first1)
+        {
+            //cout << "__________________________________________" << endl;
+            cout << "The Nodes at level " << linecnt << endl;
+            first1 = false;
+        }
         Node *temp = q.front();
         q.pop();
         if (!temp->isLeaf)
-        {
+        {            
             InternalNode *tempInternal = reinterpret_cast<InternalNode *>(temp);
             cout << "| ";
             for (int i = 0; i < tempInternal->key.size(); i++)
@@ -338,44 +350,24 @@ void BplusTree::levelOrder()
             nextlineflag += tempInternal->child.size();
             if (currentlineflag == numbercount)
             {
+                linecnt++;
                 cout << endl;
+                cout << "The Nodes at level " << linecnt << endl;                
                 currentlineflag = nextlineflag;
                 nextlineflag = 0;
                 numbercount = 0;
             }
         }
         else
-        {
+        {            
+            if(first2)
+                cout << "They are Leaves" << endl, first2 = false;
             ExternalNode *tempExternal = reinterpret_cast<ExternalNode *>(temp);
             cout << "| ";
             for (int i = 0; i < tempExternal->data.size(); i++)
-                cout << tempExternal->data[i].first << " ";
+                cout << "(" << tempExternal->data[i].first << " "<< tempExternal->data[i].second << ") ";
             cout << " | ";
         }
     }
     cout << endl;
-}
-
-int main()
-{
-    BplusTree BTree;
-    for (int i = 0; i < 18; i++)
-        BTree.insert(make_pair(i, i * 2));
-    BTree.insert(make_pair(20, 1));
-    BTree.insert(make_pair(21, 1));
-    BTree.insert(make_pair(22, 1));
-    BTree.insert(make_pair(18, 1));
-    cout << "insert success!" << endl;
-    BTree.levelOrder();
-    for (int i = 22; i >= 11; i--)
-        BTree.remove(i);
-    // BTree.remove(22);
-    // BTree.remove(21);
-    // BTree.remove(20);
-    //BTree.remove(8);
-    //BTree.remove(0);
-    //BTree.remove(2);
-    cout << "remove success!" << endl;
-    BTree.levelOrder();
-    cout << "success!" << endl;
 }

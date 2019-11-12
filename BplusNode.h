@@ -1,3 +1,5 @@
+#ifndef BPLUSNODE_H
+#define BPLUSNODE_H
 #include<vector> 
 #include<iostream>
 #define L_order 4
@@ -24,3 +26,4 @@ struct ExternalNode: public Node
     vector<Datatype> data;
     ExternalNode(): Node(true){}
 };
+#endif
