@@ -79,7 +79,7 @@ bool BplusTree::insert(const Datatype record, int &time)
     //4、则开新的外部结点，将内容移过去
     int s = L_order / 2; //中间元素的位置
 
-        ExternalNode *u = new ExternalNode();
+    ExternalNode *u = new ExternalNode();
     iter = v->data.begin();
     for (int i = 0; i < s; i++)
         iter++; //iter指向第s+1个元素

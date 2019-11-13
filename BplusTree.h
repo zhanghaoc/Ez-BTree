@@ -22,7 +22,7 @@ public:
     void levelOrder(); //层次遍历    
 private:
     void solveOverflow(InternalNode* v); //解决内部结点上溢，用于插入函数
-    void solveUnderflow(InternalNode *v);
+    void solveUnderflow(InternalNode *v); //解决内部结点下溢，用于删除函数
     Keytype getMin(Node *root); //获得root孩子中最小的键值key    
 };
 #endif
