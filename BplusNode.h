@@ -2,8 +2,9 @@
 #define BPLUSNODE_H
 #include<vector> 
 #include<iostream>
-#define L_order 4 //结点关键码最大个数
-#define M_order 5 //结点分支最大个数
+#define _order 5 //B+树的阶数
+#define _L (_order - 1) //结点关键码最大个数
+#define _M _order //结点分支最大个数
 using namespace std;
 typedef int Keytype; //键值类型
 typedef int Valuetype; //数值类型
