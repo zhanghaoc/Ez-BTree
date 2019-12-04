@@ -271,7 +271,6 @@ bool BplusTree::remove(const Keytype target, int &time)
     }
     //6.递归解决双亲结点t的下溢
     solveUnderflow(reinterpret_cast<InternalNode *>(t)); //递归解决双亲结点的下溢
-
     return true;
 }
 
